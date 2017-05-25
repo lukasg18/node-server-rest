@@ -60,4 +60,4 @@ typings/
 # distribution js
 dist/
 # vscode settings
-.vscode/
+.vscode

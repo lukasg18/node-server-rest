@@ -1,19 +1,28 @@
+import App from './App';
 import * as http from 'http';
 import * as debug from 'debug';
+import * as socketIo from 'socket.io';
 
-import App from './App';
+//var http = require('http').Server(app);
+//var io = require('socket.io')(http);
+
+
 
 debug('ts-express:server');
 
 const port = normalizePort(process.env.PORT || 3000);
-App.set('port', port);
+App.express.set('port', port);
 
-const server = http.createServer(App);
+const server = http.createServer(App.express);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+App._SockeIO = socketIo(server);
 
-function normalizePort(val: number|string): number|string|boolean {
+App.start();
+
+
+function normalizePort(val: number | string): number | string | boolean {
   let port: number = (typeof val === 'string') ? parseInt(val, 10) : val;
   if (isNaN(port)) return val;
   else if (port >= 0) return port;
@@ -23,7 +32,7 @@ function normalizePort(val: number|string): number|string|boolean {
 function onError(error: NodeJS.ErrnoException): void {
   if (error.syscall !== 'listen') throw error;
   let bind = (typeof port === 'string') ? 'Pipe ' + port : 'Port ' + port;
-  switch(error.code) {
+  switch (error.code) {
     case 'EACCES':
       console.error(`${bind} requires elevated privileges`);
       process.exit(1);

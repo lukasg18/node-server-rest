@@ -1,14 +1,19 @@
 "use strict";
+const App_1 = require('./App');
 const http = require('http');
 const debug = require('debug');
-const App_1 = require('./App');
+const socketIo = require('socket.io');
+//var http = require('http').Server(app);
+//var io = require('socket.io')(http);
 debug('ts-express:server');
 const port = normalizePort(process.env.PORT || 3000);
-App_1.default.set('port', port);
-const server = http.createServer(App_1.default);
+App_1.default.express.set('port', port);
+const server = http.createServer(App_1.default.express);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+App_1.default._SockeIO = socketIo(server);
+App_1.default.start();
 function normalizePort(val) {
     let port = (typeof val === 'string') ? parseInt(val, 10) : val;
     if (isNaN(port))

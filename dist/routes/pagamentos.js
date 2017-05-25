@@ -1,11 +1,13 @@
 "use strict";
 const express = require('express');
+const fileReader_1 = require("../util/fileReader");
 class Pagamentos {
     constructor(customexpress, pagamentodao, SocketIO) {
         this._express = customexpress.Express();
         this._router = express.Router();
         this._pagamentodao = pagamentodao;
         this._socketIO = SocketIO;
+        this._fileOperator = new fileReader_1.FileOperator();
         this.routes();
     }
     routes() {
@@ -76,6 +78,12 @@ class Pagamentos {
                     return;
                 }
                 res.send(pagamento);
+            });
+        });
+        this._router.post('/pagamentos/upload', (req, res, next) => {
+            let filename = req.headers.filename;
+            req.pipe(this._fileOperator.fs.createWriteStream(filename)).on('finish', () => {
+                res.status(201).send('OK');
             });
         });
         let self = this;

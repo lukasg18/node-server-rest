@@ -10,28 +10,17 @@ export class FileOperator {
 
   public read() {
     this.fs.readFile('yoda.jpg', (error, buffer) => {
-      if (error)
-        console.log(error);
+      if (error) { }
       else
-        console.log('arquivo lido');
-      this.fs.writeFile('saida.jpg', buffer, (error) => {
-        if (error)
-          console.log(error);
-        else
-          console.log('arquivo escrito');
-      });
+        this.fs.writeFile('saida.jpg', buffer, (error) => {
+          if (error) { }
+          else { }
+        });
     });
   }
 
   public readStream() {
-    this._fs.createReadStream('yoda.jpg').pipe(fs.createWriteStream('yoda-stream.jpg').on('finish', () => {
-      console.log('arquivo escrito com stream');
+    this.fs.createReadStream('yoda.jpg').pipe(fs.createWriteStream('yoda-stream.jpg').on('finish', () => {
     }));
   }
-
-
-
-
-
-
 }

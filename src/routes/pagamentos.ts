@@ -2,6 +2,7 @@ import * as express from 'express'
 import { PagamentoDao } from "../database/dao/pagamentoDao";
 import { CustomExpress } from "../config/custom-express";
 import { FileOperator } from "../util/fileReader";
+import { MemcachedClient } from "../servicos/memcachedClient";
 
 export class Pagamentos {
   private _router: express.Router;
@@ -9,13 +10,16 @@ export class Pagamentos {
   private _pagamentodao: PagamentoDao;
   private _socketIO: SocketIO.Server;
   private _fileOperator: FileOperator;
+  private _memcachedclient: MemcachedClient;
 
-  constructor(customexpress: CustomExpress, pagamentodao: PagamentoDao, SocketIO: any) {
+  constructor(customexpress: CustomExpress, pagamentodao: PagamentoDao,
+    SocketIO: any, memcached: MemcachedClient) {
     this._express = customexpress.Express();
     this._router = express.Router();
     this._pagamentodao = pagamentodao;
     this._socketIO = SocketIO;
     this._fileOperator = new FileOperator();
+    this._memcachedclient = memcached;
     this.routes();
   }
   private routes(): void {
@@ -53,7 +57,7 @@ export class Pagamentos {
         }
         else {
           pagamento.id = resultado.insertId;
-
+          this._memcachedclient.set(pagamento);
           let response = {
             dados_do_pagamento: pagamento,
             links: [
@@ -107,6 +111,28 @@ export class Pagamentos {
       let filename = req.headers.filename;
       req.pipe(this._fileOperator.fs.createWriteStream(filename)).on('finish', () => {
         res.status(201).send('OK');
+      });
+    });
+
+    this._router.get('/pagamentos/pagamentos/:id', (req, res, net) => {
+
+
+      let id = req.params.id;
+
+      this._memcachedclient.get(id).then((response) => {
+      
+        res.json({ response });
+      }).catch((erro) => {
+        this._pagamentodao.buscaPorId(id, (erro, resultado) => {
+          if (erro) {
+            res.status(500).send(erro);
+            return;
+          }
+          else {
+            this._memcachedclient.set(resultado);
+            res.json(resultado);
+          }
+        });
       });
     });
 

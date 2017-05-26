@@ -2,12 +2,13 @@
 const express = require('express');
 const fileReader_1 = require("../util/fileReader");
 class Pagamentos {
-    constructor(customexpress, pagamentodao, SocketIO) {
+    constructor(customexpress, pagamentodao, SocketIO, memcached) {
         this._express = customexpress.Express();
         this._router = express.Router();
         this._pagamentodao = pagamentodao;
         this._socketIO = SocketIO;
         this._fileOperator = new fileReader_1.FileOperator();
+        this._memcachedclient = memcached;
         this.routes();
     }
     routes() {
@@ -38,6 +39,7 @@ class Pagamentos {
                 }
                 else {
                     pagamento.id = resultado.insertId;
+                    this._memcachedclient.set(pagamento);
                     let response = {
                         dados_do_pagamento: pagamento,
                         links: [
@@ -84,6 +86,23 @@ class Pagamentos {
             let filename = req.headers.filename;
             req.pipe(this._fileOperator.fs.createWriteStream(filename)).on('finish', () => {
                 res.status(201).send('OK');
+            });
+        });
+        this._router.get('/pagamentos/pagamentos/:id', (req, res, net) => {
+            let id = req.params.id;
+            this._memcachedclient.get(id).then((response) => {
+                res.json({ response });
+            }).catch((erro) => {
+                this._pagamentodao.buscaPorId(id, (erro, resultado) => {
+                    if (erro) {
+                        res.status(500).send(erro);
+                        return;
+                    }
+                    else {
+                        this._memcachedclient.set(resultado);
+                        res.json(resultado);
+                    }
+                });
             });
         });
         let self = this;

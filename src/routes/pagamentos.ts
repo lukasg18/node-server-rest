@@ -3,6 +3,7 @@ import { PagamentoDao } from "../database/dao/pagamentoDao";
 import { CustomExpress } from "../config/custom-express";
 import { FileOperator } from "../util/fileReader";
 import { MemcachedClient } from "../servicos/memcachedClient";
+import { Logger } from "../servicos/logger";
 
 export class Pagamentos {
   private _router: express.Router;
@@ -12,6 +13,8 @@ export class Pagamentos {
   private _fileOperator: FileOperator;
   private _memcachedclient: MemcachedClient;
 
+
+
   constructor(customexpress: CustomExpress, pagamentodao: PagamentoDao,
     SocketIO: any, memcached: MemcachedClient) {
     this._express = customexpress.Express();
@@ -20,6 +23,7 @@ export class Pagamentos {
     this._socketIO = SocketIO;
     this._fileOperator = new FileOperator();
     this._memcachedclient = memcached;
+
     this.routes();
   }
   private routes(): void {
@@ -120,7 +124,7 @@ export class Pagamentos {
       let id = req.params.id;
 
       this._memcachedclient.get(id).then((response) => {
-      
+
         res.json({ response });
       }).catch((erro) => {
         this._pagamentodao.buscaPorId(id, (erro, resultado) => {
